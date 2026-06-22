@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { ethers } from 'ethers';
+import { Attribution } from 'ox/erc8021';
 import {
   BASE_CHAIN_HEX,
   BASE_RPC,
@@ -15,7 +16,7 @@ export function useWallet() {
   const connect = useCallback(async () => {
     if (!window.ethereum) {
       alert(
-        'MetaMask không tìm thấy. Hãy cài MetaMask để dùng tính năng on-chain.',
+        'MetaMask not found. Please install MetaMask to use on-chain features.',
       );
       return;
     }
@@ -53,7 +54,7 @@ export function useWallet() {
     } catch (err) {
       console.error('Wallet connect failed:', err);
       try {
-        alert('Kết nối ví thất bại: ' + (err?.message || err));
+        alert('Wallet connection failed: ' + (err?.message || err));
       } catch (e) {}
     }
   }, []);
@@ -71,7 +72,10 @@ export function useWallet() {
         wallet.signer,
       );
       const fee = await contract.gameStartFee();
-      const tx = await contract.payGameStart({ value: fee });
+      const txReq = await contract.payGameStart.populateTransaction({ value: fee });
+      const dataSuffix = Attribution.toDataSuffix({ codes: ['bc_rmpv9254'] });
+      txReq.data = txReq.data + dataSuffix.slice(2);
+      const tx = await wallet.signer.sendTransaction(txReq);
       await tx.wait();
       setFeeStatus('ok');
       setTxHash(tx.hash);
@@ -94,7 +98,10 @@ export function useWallet() {
         wallet.signer,
       );
       const fee = await contract.gameEndFee();
-      const tx = await contract.payGameEnd({ value: fee });
+      const txReq = await contract.payGameEnd.populateTransaction({ value: fee });
+      const dataSuffix = Attribution.toDataSuffix({ codes: ['bc_rmpv9254'] });
+      txReq.data = txReq.data + dataSuffix.slice(2);
+      const tx = await wallet.signer.sendTransaction(txReq);
       await tx.wait();
       setFeeStatus('ok');
       setTxHash(tx.hash);

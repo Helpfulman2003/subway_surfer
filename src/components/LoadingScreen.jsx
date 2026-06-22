@@ -34,13 +34,13 @@ export default function LoadingScreen({
             {msg}
           </div>
           <button id='btn-play' style={{ display: 'block' }} onClick={onPlay}>
-            ▶ PLAY NOW
+            PLAY NOW
           </button>
 
           <div id='wallet-area'>
             {!wallet ? (
               <button id='btn-wallet' onClick={onConnect}>
-                🔗 Connect Wallet
+                Connect Wallet
               </button>
             ) : (
               <a
@@ -62,10 +62,10 @@ export default function LoadingScreen({
                 ></div>
                 <span>
                   {feeStatus === 'paying'
-                    ? 'Đang trả phí…'
+                    ? 'Paying fee...'
                     : feeStatus === 'ok'
-                      ? 'Phí đã thanh toán ✓'
-                      : 'Bỏ qua phí'}
+                      ? 'Fee paid'
+                      : 'Fee skipped'}
                 </span>
               </div>
             )}

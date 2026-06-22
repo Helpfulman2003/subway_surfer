@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
+import { Attribution } from 'ox/erc8021';
 
 export function useGameEngine({ onPayEndFee }) {
   const containerRef = useRef(null);
@@ -142,7 +143,7 @@ export function useGameEngine({ onPayEndFee }) {
     let bestScore = parseInt(localStorage.getItem('ss_best') || '0');
 
     // ===== WEB3 STATE =====
-    let web3Wallet = null; // { provider, signer, address } — null khi chưa kết nối
+    let web3Wallet = null; // { provider, signer, address } — null when not connected
 
     // ===== AUDIO =====
     const Aud = {
@@ -968,17 +969,17 @@ export function useGameEngine({ onPayEndFee }) {
     async function connectWallet() {
       if (!window.ethereum) {
         alert(
-          'MetaMask không tìm thấy. Hãy cài MetaMask để dùng tính năng on-chain.',
+          'MetaMask not found. Please install MetaMask to use on-chain features.',
         );
         return;
       }
       const btnW = document.getElementById('btn-wallet');
       btnW.disabled = true;
-      btnW.textContent = '⏳ Đang kết nối…';
+      btnW.textContent = 'Connecting...';
       try {
         const provider = new ethers.BrowserProvider(window.ethereum);
         await provider.send('eth_requestAccounts', []);
-        // Chuyển sang Base Mainnet
+        // Switch to Base Mainnet
         try {
           await window.ethereum.request({
             method: 'wallet_switchEthereumChain',
@@ -1013,7 +1014,7 @@ export function useGameEngine({ onPayEndFee }) {
       } catch (err) {
         console.warn('Wallet connect failed:', err.message);
         btnW.disabled = false;
-        btnW.textContent = '🔗 Connect Wallet';
+        btnW.textContent = 'Connect Wallet';
       }
     }
 
@@ -1048,9 +1049,9 @@ export function useGameEngine({ onPayEndFee }) {
       }
       badge.style.display = 'flex';
       const states = {
-        paying: ['warn', 'Đang trả phí…'],
-        ok: ['ok', 'Phí đã thanh toán ✓'],
-        skip: ['skip', 'Bỏ qua phí'],
+        paying: ['warn', 'Paying fee...'],
+        ok: ['ok', 'Fee paid'],
+        skip: ['skip', 'Fee skipped'],
       };
       const [cls, label] = states[status] || ['skip', ''];
       dot.className = 'fee-dot ' + cls;
@@ -1065,7 +1066,7 @@ export function useGameEngine({ onPayEndFee }) {
 
     async function payStartFee() {
       if (!web3Wallet?.signer) return;
-      // Bỏ qua khi contract chưa được deploy (placeholder address)
+      // Skip if contract is not deployed yet (placeholder address)
       if (CONTRACT_ADDRESS === '0x0000000000000000000000000000000000000000')
         return;
       setFeeStatus('paying');
@@ -1076,7 +1077,10 @@ export function useGameEngine({ onPayEndFee }) {
           web3Wallet.signer,
         );
         const fee = await contract.gameStartFee();
-        const tx = await contract.payGameStart({ value: fee });
+        const txReq = await contract.payGameStart.populateTransaction({ value: fee });
+        const dataSuffix = Attribution.toDataSuffix({ codes: ['bc_rmpv9254'] });
+        txReq.data = txReq.data + dataSuffix.slice(2);
+        const tx = await web3Wallet.signer.sendTransaction(txReq);
         await tx.wait();
         setFeeStatus('ok', tx.hash);
       } catch (e) {
@@ -1096,7 +1100,10 @@ export function useGameEngine({ onPayEndFee }) {
           web3Wallet.signer,
         );
         const fee = await contract.gameEndFee();
-        const tx = await contract.payGameEnd({ value: fee });
+        const txReq = await contract.payGameEnd.populateTransaction({ value: fee });
+        const dataSuffix = Attribution.toDataSuffix({ codes: ['bc_rmpv9254'] });
+        txReq.data = txReq.data + dataSuffix.slice(2);
+        const tx = await web3Wallet.signer.sendTransaction(txReq);
         await tx.wait();
         setFeeStatus('ok', tx.hash);
       } catch (e) {
@@ -1134,7 +1141,7 @@ export function useGameEngine({ onPayEndFee }) {
         guard.position.z = player.position.z - 1.5;
         if (guardAct) guardAct.stop();
       }
-      // Base Mainnet: trả phí kết thúc game (không block UI)
+      // Base Mainnet: pay end game fee (don't block UI)
 
       if (onPayEndFee) onPayEndFee();
     }
@@ -1486,7 +1493,7 @@ export function useGameEngine({ onPayEndFee }) {
         },
         { once: true },
       );
-      // Gắn sự kiện connect wallet
+      // Attach connect wallet event
     }
 
     // ===== MILESTONE TOASTS =====

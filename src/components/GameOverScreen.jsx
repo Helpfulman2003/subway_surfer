@@ -10,8 +10,7 @@ export default function GameOverScreen({
 }) {
   return (
     <div id='game-over-screen' style={{ display: 'flex' }}>
-      <div className='go-skull'>💀</div>
-      <div className='go-title'>WASTED</div>
+      <div className='go-title' style={{ marginTop: '20px' }}>WASTED</div>
       <div className='go-divider'></div>
 
       <div className='go-stats'>
@@ -43,7 +42,7 @@ export default function GameOverScreen({
             target='_blank'
             rel='noreferrer'
           >
-            🔗
+            View TX
           </a>
         </div>
       )}
@@ -54,7 +53,7 @@ export default function GameOverScreen({
           id='btn-restart'
           onClick={onRestart}
         >
-          🔄 PLAY AGAIN
+          PLAY AGAIN
         </button>
       </div>
     </div>

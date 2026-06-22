@@ -5,8 +5,8 @@ export default function HudControls({ isMuted, onToggleMute, onVolumeChange, wal
 
   return (
     <div id="hud-controls" style={{ display: 'flex' }}>
-      <div id="btn-mute" onClick={onToggleMute}>
-        {isMuted ? '🔇' : '🔊'}
+      <div id="btn-mute" onClick={onToggleMute} style={{ fontSize: '10px', fontWeight: 'bold' }}>
+        {isMuted ? 'MUTE' : 'UNMUTE'}
       </div>
       <input 
         id="vol" 
